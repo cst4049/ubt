@@ -1,0 +1,123 @@
+work_dir=/tmp
+cd ${work_dir}
+
+user=$SUDO_USER
+home=/home/${user}
+
+desktop_dir=/usr/share/applications
+
+
+function r_apts {
+	echo "ubuntu apt source replace2aliyun ........"
+	mv /etc/apt/sources.list /etc/apt/sources.list.bak
+	echo "deb http://mirrors.aliyun.com/ubuntu/ focal main restricted universe multiverse
+#deb-src http://mirrors.aliyun.com/ubuntu/ focal main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ focal-security main restricted universe multiverse
+#deb-src http://mirrors.aliyun.com/ubuntu/ focal-security main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ focal-updates main restricted universe multiverse
+#deb-src http://mirrors.aliyun.com/ubuntu/ focal-updates main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ focal-proposed main restricted universe multiverse
+#deb-src http://mirrors.aliyun.com/ubuntu/ focal-proposed main restricted universe multiverse
+deb http://mirrors.aliyun.com/ubuntu/ focal-backports main restricted universe multiverse
+#deb-src http://mirrors.aliyun.com/ubuntu/ focal-backports main restricted universe multiverse" > /etc/apt/sources.list
+	apt update
+	echo "ubuntu apt source replace2aliyun successed......."
+}
+
+
+
+function ins_dev {
+	pip_dir=${home}/.pip
+	echo "install pip3 ......."
+	apt install -y python3-pip
+	echo "install pip3 success......."
+
+	echo "add pip source........"
+	if [ ! -d $pip_dir ];then
+		mkdir $pip_dir
+	fi
+
+	echo "[global]
+trusted-host=mirrors.aliyun.com
+index-url=https://mirrors.aliyun.com/pypi/simple/" > /$pip_dir/pip.conf
+	chown -R $user $pip_dir
+	echo "add pip source success ......."
+
+
+	echo "install dev: vim git gitk ......."
+	apt install -y vim git gitk
+	echo "install dev: vim git git success ......."
+}
+
+
+
+function ins_chrome {
+	echo "安装chrome 浏览器"
+	wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+	apt install -f -y ./google-chrome-stable_current_amd64.deb
+	echo "安装chrome 浏览器完成"
+}
+
+
+function ins_pycharm {
+	echo "安装pycharm 编辑器"
+	wget https://download.jetbrains.com.cn/python/pycharm-community-2021.2.3.tar.gz
+	tar -zxvf pycharm-community-2021.2.3.tar.gz
+	mv pycharm-community-2021.2.3 /opt/pycharm
+	echo "安装pycharm 编辑器完成"
+	
+	echo "添加pycharm应用图标"
+
+	echo "[Desktop Entry]
+Name=pycharm
+Comment=Access the IDEA
+Exec=/opt/pycharm/bin/pycharm.sh
+StartupNotify=true
+Terminal=false
+Icon=/opt/pycharm/bin/pycharm.svg
+Type=Application
+Categories=Development;" > ${desktop_dir}/pycharm.desktop
+
+	echo "添加pycharm应用图标完成"
+
+}
+
+
+function ins_docker {
+	echo "install docker ......."
+	apt install -y docker.io
+	echo "install docker success ......."
+
+	echo "add docker source......"
+	echo '{"registry-mirrors": ["https://registry.cn-hangzhou.aliyuncs.com"]}' > /etc/docker/daemon.json
+	echo "add docker source success ...."
+
+	echo "add user to docker group"
+	usermod -aG docker ${user}
+	
+}
+
+
+function del_firefox {
+	apt remove -y firefox firefox-locale-en
+	apt autoremove
+	apt autoclean
+	dpkg -P firefox
+}
+
+
+function ins_fcitx {
+	apt install -y fcitx-table-wbpy
+	apt remove -y ibus ibus-data ibus-gtk   ibus-gtk3
+	dpkg -P ibus
+}
+
+#r_apts
+#ins_dev
+#ins_chrome
+#ins_pycharm
+#ins_docker
+#del_firefox
+
+echo 'successed init done'
+
